@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EcsFargateRollingUpdate", "EcsFargateRollingUpdate\EcsFargateRollingUpdate.csproj", "{35075B8F-E4F6-4E76-ADC9-86D3185F95B8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Deploy", "Deploy", "{7EC2CD08-4DB4-42EF-8A6A-6D7F926BF41C}"
+ProjectSection(SolutionItems) = preProject
+	Deploy\deploy.ps1 = Deploy\deploy.ps1
+	Deploy\deploy-rolling-app.ps1 = Deploy\deploy-rolling-app.ps1
+	Deploy\deploy-rolling-repo.ps1 = Deploy\deploy-rolling-repo.ps1
+	Deploy\publish-rolling-docker.ps1 = Deploy\publish-rolling-docker.ps1
+	Deploy\deploy-network.ps1 = Deploy\deploy-network.ps1
+EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Environment", "Environment", "{C981F939-B682-4CEA-8E91-F27F54B84EB7}"
+ProjectSection(SolutionItems) = preProject
+	Environment\rolling-repo.yaml = Environment\rolling-repo.yaml
+	Environment\network.yaml = Environment\network.yaml
+	rolling-application.yaml = rolling-application.yaml
+EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{35075B8F-E4F6-4E76-ADC9-86D3185F95B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{35075B8F-E4F6-4E76-ADC9-86D3185F95B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{35075B8F-E4F6-4E76-ADC9-86D3185F95B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{35075B8F-E4F6-4E76-ADC9-86D3185F95B8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

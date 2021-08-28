@@ -1,0 +1,225 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  ServiceName:
+    Type: String
+  ImageVersion:
+    Type: String
+  VpcId:
+    Type: String
+  SubnetAId:
+    Type: String
+  SubnetBId:
+    Type: String
+  SubnetCId:
+    Type: String
+
+Resources:
+  ########################################
+  ################# ALB ##################
+  ########################################
+
+  Alb:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Type: application
+      IpAddressType: ipv4
+      Scheme: internet-facing
+      Subnets:
+        - !Ref SubnetAId
+        - !Ref SubnetBId
+        - !Ref SubnetCId
+      SecurityGroups:
+        - Fn::ImportValue: !Sub ${ServiceName}-net-alb-security-group
+
+  AlbListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref Alb
+      Port: 80
+      Protocol: HTTP
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref AlbTargetGroup
+
+  AlbTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckPath: /health
+      HealthCheckIntervalSeconds: 10
+      HealthCheckTimeoutSeconds: 8
+      HealthyThresholdCount: 3
+      UnhealthyThresholdCount: 3
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 10
+      Port: 80
+      Protocol: HTTP
+      TargetType: ip
+      VpcId: !Ref VpcId
+
+  ########################################
+  ################# ECS ##################
+  ########################################
+
+  EcsCluster:
+    Type: AWS::ECS::Cluster
+    Properties: { }
+
+  EcsService:
+    Type: AWS::ECS::Service
+    DependsOn: AlbListener
+    Properties:
+      Cluster: !Ref EcsCluster
+      LaunchType: FARGATE
+      TaskDefinition: !Ref EcsTaskDefinition
+      DesiredCount: 1
+      DeploymentController:
+        Type: ECS
+      DeploymentConfiguration:
+        DeploymentCircuitBreaker:
+          Enable: true
+          Rollback: true
+        MinimumHealthyPercent: 100
+        MaximumPercent: 200
+      HealthCheckGracePeriodSeconds: 2
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          SecurityGroups:
+            - Fn::ImportValue: !Sub ${ServiceName}-net-ecs-security-group
+          Subnets:
+            - !Ref SubnetAId
+            - !Ref SubnetBId
+            - !Ref SubnetCId
+      LoadBalancers:
+        - ContainerName: !Ref ServiceName
+          ContainerPort: 80
+          TargetGroupArn: !Ref AlbTargetGroup
+
+  EcsTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Ref ServiceName
+      Cpu: 256
+      Memory: 1024
+      NetworkMode: awsvpc
+      TaskRoleArn: !GetAtt EcsTaskRole.Arn
+      ExecutionRoleArn: !GetAtt EcsTaskExecutionRole.Arn
+      RequiresCompatibilities:
+        - FARGATE
+      ContainerDefinitions:
+        - Name: !Ref ServiceName
+          Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ServiceName}-rolling-repo:${ImageVersion}
+          PortMappings:
+            - ContainerPort: 80
+          HealthCheck:
+            Command: [ "CMD-SHELL", "curl -f -k http://localhost:80/health || exit 1" ]
+            Retries: 3
+            Timeout: 10  # seconds
+            Interval: 5  # seconds
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref EcsTaskLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: ecs
+        - Name: xray-daemon
+          Cpu: 10
+          Memory: 256
+          Image: amazon/aws-xray-daemon
+          PortMappings:
+            - ContainerPort: 2000
+              Protocol: udp
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref EcsTaskLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: ecs
+
+  EcsScalableTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MinCapacity: 1
+      MaxCapacity: 3
+      RoleARN: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService
+      ServiceNamespace: ecs
+      ScalableDimension: ecs:service:DesiredCount
+      ResourceId: !Join [ /, [ service, !Ref EcsCluster, !GetAtt EcsService.Name ] ]
+
+  EcsServiceScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: !Sub ${ServiceName}-target-tracking
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref EcsScalableTarget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 75.0
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ECSServiceAverageMemoryUtilization
+
+  EcsTaskLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /ecs/${ServiceName}
+      RetentionInDays: 180
+
+  EcsTaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+      Policies:
+        - PolicyName: allowToGetEcrImage
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: ecr:GetAuthorizationToken
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:BatchGetImage
+                Resource: !Sub arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/${ServiceName}-rolling-repo
+        - PolicyName: allowToPutCloudWatchLogs
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !GetAtt EcsTaskLogGroup.Arn
+                
+  EcsTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess
+        - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
+      Policies:
+        - PolicyName: allowToPutCloudWatchLogs
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !GetAtt EcsTaskLogGroup.Arn

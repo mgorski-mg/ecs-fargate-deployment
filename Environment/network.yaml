@@ -1,0 +1,43 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  VpcId:
+    Type: String
+
+Resources:
+  AlbSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Sub ${AWS::StackName} ALB security group
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - Description: Allow HTTP traffic from internet
+          IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+
+  EcsSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Sub ${AWS::StackName} ECS security group
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - Description: Allow HTTP traffic from ALB
+          IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          SourceSecurityGroupId: !Ref AlbSecurityGroup
+
+Outputs:
+  AlbSecurityGroupId:
+    Description: ALB security group
+    Value: !Ref AlbSecurityGroup
+    Export:
+      Name: !Sub ${AWS::StackName}-alb-security-group
+
+  EcsSecurityGroupId:
+    Description: ECS security group
+    Value: !Ref EcsSecurityGroup
+    Export:
+      Name: !Sub ${AWS::StackName}-ecs-security-group

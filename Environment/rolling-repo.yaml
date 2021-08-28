@@ -1,0 +1,42 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Resources:
+  EcrRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Sub ${AWS::StackName}
+      ImageScanningConfiguration:
+        scanOnPush: true
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Keep max 4 images, expire all others",
+                "selection": {
+                  "tagStatus": "any",
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 4
+                },
+                "action": {
+                  "type": "expire"
+                }
+              }
+            ]
+          }
+      RepositoryPolicyText:
+        Version: 2008-10-17
+        Statement:
+          - Sid: Allow Push And Pull
+            Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action:
+              - ecr:GetDownloadUrlForLayer
+              - ecr:BatchGetImage
+              - ecr:BatchCheckLayerAvailability
+              - ecr:PutImage
+              - ecr:InitiateLayerUpload
+              - ecr:UploadLayerPart
+              - ecr:CompleteLayerUpload
