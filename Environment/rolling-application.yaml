@@ -126,7 +126,7 @@ Resources:
         - Name: xray-daemon
           Cpu: 10
           Memory: 256
-          Image: amazon/aws-xray-daemon
+          Image: public.ecr.aws/xray/aws-xray-daemon:latest
           PortMappings:
             - ContainerPort: 2000
               Protocol: udp
@@ -199,7 +199,7 @@ Resources:
                   - logs:CreateLogStream
                   - logs:PutLogEvents
                 Resource: !GetAtt EcsTaskLogGroup.Arn
-                
+
   EcsTaskRole:
     Type: AWS::IAM::Role
     Properties:

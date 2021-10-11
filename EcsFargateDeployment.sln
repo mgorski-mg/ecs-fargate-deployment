@@ -15,7 +15,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Environment", "Environment"
 ProjectSection(SolutionItems) = preProject
 	Environment\rolling-repo.yaml = Environment\rolling-repo.yaml
 	Environment\network.yaml = Environment\network.yaml
-	rolling-application.yaml = rolling-application.yaml
+	Environment\rolling-application.yaml = Environment\rolling-application.yaml
 EndProjectSection
 EndProject
 Global

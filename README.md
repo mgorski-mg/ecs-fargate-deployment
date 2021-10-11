@@ -11,10 +11,14 @@ Sample app showing how to configure rolling update in AWS Fargate.
 * Powershell Core
 
 ### Required variables to be set
+
 #### deploy.ps1
+
 * deployBucketName -> name of the Amazon S3 Bucket used to deploy AWS CloudFormation stacks.
 * vpcId -> Id of the Amazon VPC where resources will be placed.
+
 #### deploy-rolling-app.ps1
+
 * subnetAId, subnetBId, subnetCId -> Ids of the Subnets where resources will be placed. Three subnets are used to achieve High Availability using three Availability Zones.
 
 ## Deployment
