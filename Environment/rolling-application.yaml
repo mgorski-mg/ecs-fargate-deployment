@@ -30,7 +30,7 @@ Resources:
         - !Ref SubnetBId
         - !Ref SubnetCId
       SecurityGroups:
-        - Fn::ImportValue: !Sub ${ServiceName}-net-alb-security-group
+        - Fn::ImportValue: !Sub ${ServiceName}-sec-alb-security-group
 
   AlbListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
@@ -86,7 +86,7 @@ Resources:
       NetworkConfiguration:
         AwsvpcConfiguration:
           SecurityGroups:
-            - Fn::ImportValue: !Sub ${ServiceName}-net-ecs-security-group
+            - Fn::ImportValue: !Sub ${ServiceName}-sec-ecs-security-group
           Subnets:
             - !Ref SubnetAId
             - !Ref SubnetBId

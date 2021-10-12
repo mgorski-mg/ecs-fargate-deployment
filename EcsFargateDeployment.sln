@@ -8,13 +8,13 @@ ProjectSection(SolutionItems) = preProject
 	Deploy\deploy-rolling-app.ps1 = Deploy\deploy-rolling-app.ps1
 	Deploy\deploy-rolling-repo.ps1 = Deploy\deploy-rolling-repo.ps1
 	Deploy\publish-rolling-docker.ps1 = Deploy\publish-rolling-docker.ps1
-	Deploy\deploy-network.ps1 = Deploy\deploy-network.ps1
+	Deploy\deploy-security.ps1 = Deploy\deploy-security.ps1
 EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Environment", "Environment", "{C981F939-B682-4CEA-8E91-F27F54B84EB7}"
 ProjectSection(SolutionItems) = preProject
 	Environment\rolling-repo.yaml = Environment\rolling-repo.yaml
-	Environment\network.yaml = Environment\network.yaml
+	Environment\security.yaml = Environment\security.yaml
 	Environment\rolling-application.yaml = Environment\rolling-application.yaml
 EndProjectSection
 EndProject

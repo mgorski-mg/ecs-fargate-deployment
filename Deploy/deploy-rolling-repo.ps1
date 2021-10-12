@@ -17,5 +17,6 @@ aws cloudformation deploy `
     --stack-name $ServiceName-$stackType `
     --s3-bucket $DeployBucketName `
     --s3-prefix $ServiceName/$stackType `
+    --parameter-overrides "ServiceName=$ServiceName" `
     --capabilities CAPABILITY_NAMED_IAM `
     --no-fail-on-empty-changeset;

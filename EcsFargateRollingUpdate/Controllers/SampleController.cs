@@ -9,7 +9,7 @@ namespace EcsFargateRollingUpdate.Controllers
         [HttpGet]
         public IActionResult Test()
         {
-            return Ok();
+            return Ok("Healthy");
         }
     }
 }

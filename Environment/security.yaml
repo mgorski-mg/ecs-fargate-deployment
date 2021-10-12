@@ -3,8 +3,30 @@ AWSTemplateFormatVersion: 2010-09-09
 Parameters:
   VpcId:
     Type: String
+  ServiceName:
+    Type: String
 
 Resources:
+  KmsKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: ECS Deploy KMS Key
+      KeyPolicy:
+        Version: 2012-10-17
+        Id: !Sub ${AWS::StackName}-kms-key
+        Statement:
+          - Effect: Allow
+            Action: kms:*
+            Principal:
+              AWS: !Ref AWS::AccountId
+            Resource: '*'
+
+  KmsKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub alias/${ServiceName}
+      TargetKeyId: !GetAtt KmsKey.Arn
+
   AlbSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -30,6 +52,12 @@ Resources:
           SourceSecurityGroupId: !Ref AlbSecurityGroup
 
 Outputs:
+  KmsKeyArn:
+    Description: ECS Deploy KMS key ARN
+    Value: !GetAtt KmsKey.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-kms-key-arn
+
   AlbSecurityGroupId:
     Description: ALB security group
     Value: !Ref AlbSecurityGroup

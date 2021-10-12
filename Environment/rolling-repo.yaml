@@ -1,10 +1,19 @@
 AWSTemplateFormatVersion: 2010-09-09
 
+Parameters:
+  ServiceName:
+    Type: String
+
 Resources:
   EcrRepository:
     Type: AWS::ECR::Repository
     Properties:
       RepositoryName: !Sub ${AWS::StackName}
+      EncryptionConfiguration:
+        EncryptionType: KMS
+        KmsKey:
+          Fn::ImportValue: !Sub ${ServiceName}-sec-kms-key-arn
+      ImageTagMutability: IMMUTABLE
       ImageScanningConfiguration:
         ScanOnPush: true
       LifecyclePolicy:
