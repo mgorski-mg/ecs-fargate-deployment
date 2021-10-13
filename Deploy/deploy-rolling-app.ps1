@@ -18,15 +18,18 @@ $stackType = "rolling-app"
 
 Write-Host "Deploying $ServiceName-$stackType"
 
-$subnetAId = "[subnet-a-id]"
-$subnetBId = "[subnet-b-id]"
-$subnetCId = "[subnet-c-id]"
+$albSubnetAId = "[alb-subnet-a-id]"
+$albSubnetBId = "[alb-subnet-b-id]"
+$albSubnetCId = "[alb-subnet-c-id]"
+$ecsSubnetAId = "[ecs-subnet-a-id]"
+$ecsSubnetBId = "[ecs-subnet-b-id]"
+$ecsSubnetCId = "[ecs-subnet-c-id]"
 
 aws cloudformation deploy `
     --template-file $PSScriptRoot/../Environment/rolling-application.yaml `
     --stack-name $ServiceName-$stackType `
     --s3-bucket $DeployBucketName `
     --s3-prefix $ServiceName/$stackType `
-    --parameter-overrides "ServiceName=$ServiceName" "ImageVersion=$ImageVersion" "VpcId=$VpcId" "SubnetAId=$subnetAId" "SubnetBId=$subnetBId" "SubnetCId=$subnetCId" `
+    --parameter-overrides "ServiceName=$ServiceName" "ImageVersion=$ImageVersion" "VpcId=$VpcId" "AlbSubnetAId=$albSubnetAId" "AlbSubnetBId=$albSubnetBId" "AlbSubnetCId=$albSubnetCId" "EcsSubnetAId=$ecsSubnetAId" "EcsSubnetBId=$ecsSubnetBId" "EcsSubnetCId=$ecsSubnetCId" `
     --capabilities CAPABILITY_NAMED_IAM `
     --no-fail-on-empty-changeset;

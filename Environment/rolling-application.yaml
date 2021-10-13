@@ -7,11 +7,17 @@ Parameters:
     Type: String
   VpcId:
     Type: String
-  SubnetAId:
+  AlbSubnetAId:
     Type: String
-  SubnetBId:
+  AlbSubnetBId:
     Type: String
-  SubnetCId:
+  AlbSubnetCId:
+    Type: String
+  EcsSubnetAId:
+    Type: String
+  EcsSubnetBId:
+    Type: String
+  EcsSubnetCId:
     Type: String
 
 Resources:
@@ -26,9 +32,9 @@ Resources:
       IpAddressType: ipv4
       Scheme: internet-facing
       Subnets:
-        - !Ref SubnetAId
-        - !Ref SubnetBId
-        - !Ref SubnetCId
+        - !Ref AlbSubnetAId
+        - !Ref AlbSubnetBId
+        - !Ref AlbSubnetCId
       SecurityGroups:
         - Fn::ImportValue: !Sub ${ServiceName}-sec-alb-security-group
 
@@ -88,9 +94,9 @@ Resources:
           SecurityGroups:
             - Fn::ImportValue: !Sub ${ServiceName}-sec-ecs-security-group
           Subnets:
-            - !Ref SubnetAId
-            - !Ref SubnetBId
-            - !Ref SubnetCId
+            - !Ref EcsSubnetAId
+            - !Ref EcsSubnetBId
+            - !Ref EcsSubnetCId
       LoadBalancers:
         - ContainerName: !Ref ServiceName
           ContainerPort: 80
