@@ -2,6 +2,8 @@
 
 Sample app showing how to configure rolling update in AWS Fargate.
 
+There are introduced some of the tricks to increase deployment speed base on [Nathan Peck's article - Speeding up Amazon ECS container deployments](https://nathanpeck.com/speeding-up-amazon-ecs-container-deployments/).
+
 ## Setup
 
 ### Prerequisites

@@ -52,13 +52,13 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckPath: /health
-      HealthCheckIntervalSeconds: 10
-      HealthCheckTimeoutSeconds: 8
-      HealthyThresholdCount: 3
-      UnhealthyThresholdCount: 3
+      HealthCheckIntervalSeconds: 5
+      HealthCheckTimeoutSeconds: 3
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 2
       TargetGroupAttributes:
         - Key: deregistration_delay.timeout_seconds
-          Value: 10
+          Value: 5
       Port: 80
       Protocol: HTTP
       TargetType: ip
@@ -86,7 +86,7 @@ Resources:
         DeploymentCircuitBreaker:
           Enable: true
           Rollback: true
-        MinimumHealthyPercent: 100
+        MinimumHealthyPercent: 50
         MaximumPercent: 200
       HealthCheckGracePeriodSeconds: 2
       NetworkConfiguration:
@@ -129,6 +129,7 @@ Resources:
               awslogs-group: !Ref EcsTaskLogGroup
               awslogs-region: !Ref AWS::Region
               awslogs-stream-prefix: ecs
+          StopTimeout: 2
         - Name: xray-daemon
           Cpu: 10
           Memory: 256
@@ -151,7 +152,7 @@ Resources:
       RoleARN: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService
       ServiceNamespace: ecs
       ScalableDimension: ecs:service:DesiredCount
-      ResourceId: !Join [ /, [ service, !Ref EcsCluster, !GetAtt EcsService.Name ] ]
+      ResourceId: !Sub service/${EcsCluster}/${EcsService.Name}
 
   EcsServiceScalingPolicy:
     Type: AWS::ApplicationAutoScaling::ScalingPolicy
